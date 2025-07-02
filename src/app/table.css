@@ -1,0 +1,16 @@
+table {
+    table-layout: fixed;
+    width: 80%;
+    min-width: 1000px;
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+td {
+    text-align: center;
+    width: 25%;
+}
+
+td.TopBar {
+    float: left;
+}

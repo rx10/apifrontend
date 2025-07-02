@@ -1,20 +1,21 @@
-'use client';
-
-//USED LLM FOR THIS CODE (IT WAS TOO ANNOYING TO WRITE IT MYSELF)
-
-import { useEffect, useState } from 'react';
-import Table from './table';
+'use client'
+import { useEffect, useState } from "react";
+import Table from "../table";
 
 // Define User interface for type safety
-interface User {
+interface Order {
     id: number;
-    firstName: string;
-    lastName: string;
+    custId: number;
+    itemName: string;
+    itemPrice: number;
+    itemQty: number;
+    createdAt: string;
 }
 
-export default function Home() {
+
+export default function Orders() {
     // Initialize users as an empty array with User type
-    const [users, setUsers] = useState<User[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
     // Add loading state to handle async fetch
     const [isLoading, setIsLoading] = useState(true);
     // Add error state for API failures
@@ -24,18 +25,21 @@ export default function Home() {
         const fetchUsers = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch('http://localhost:8080');
+                const response = await fetch('http://localhost:8090');
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 const data = await response.json();
                 // Normalize API data to ensure firstName and lastName
-                const normalizedData: User[] = data.map((item: any) => ({
+                const normalizedData: Order[] = data.map((item: any) => ({
                     id: item.id,
-                    firstName: item.firstName || item.first_name || '', // Handle API key variations
-                    lastName: item.lastName || item.last_name || '',
+                    custId: item.custId || item.cust_id || '', // Handle API key variations
+                    createdAt: item.createdAt || item.created_at || '',
+                    itemPrice: item.itemPrice || item.item_price || '',
+                    itemName: item.itemName || item.item_name || '',
+                    itemQty: item.itemQty || item.item_qty || '',
                 }));
-                setUsers(normalizedData);
+                setOrders(normalizedData);
             } catch (err) {
                 console.error('Fetch error:', err);
                 setError('Failed to load users');
@@ -48,15 +52,15 @@ export default function Home() {
 
     return (
         <div>
-            <h1>Customers</h1>
-            <h3>Go to <a href='/orders'>Orders</a></h3>
+            <h1>Orders</h1>
+            <h3>Go to <a href='/'>Customers</a></h3>
             {isLoading ? (
                 <p>Loading...</p>
             ) : error ? (
                 <p>Error: {error}</p>
             ) : (
-                <Table arr={users} setArr={setUsers} />
+                <Table arr={orders} setArr={setOrders} />
             )}
         </div>
-    );
+    )
 }
