@@ -4,6 +4,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@mui/material';
+import Link from 'next/link';
 import Table from './table';
 
 // Specific entity types
@@ -72,7 +73,7 @@ export default function Home() {
     return (
         <>
             <h1>Customers</h1>
-            <h3>Go to <a href='/orders'>Orders</a></h3>
+            <h3>Go to <Link href='/orders'>Orders</Link></h3>
             <Button onClick={handleUpdate} variant="contained" style={{ margin: '10px' }}>
                 Refresh Data
             </Button>

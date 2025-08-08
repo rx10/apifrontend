@@ -65,7 +65,7 @@ export default function Orders() {
             }
         };
         fetchUsers();
-    }, []);
+    }, [lastUpdated]);
 
     // Manual refresh
     const handleUpdate = useCallback(() => {
