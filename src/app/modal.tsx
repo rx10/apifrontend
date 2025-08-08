@@ -56,9 +56,11 @@ export default function ModalButton<T extends Entity>({
                 if (field.type === 'datetime-local' && formattedData[field.key]) {
                     try {
                         formattedData[field.key] = parseISO(formattedData[field.key] as string).toISOString().split('.')[0];
-                    } catch (error) {
-                        console.error(`Invalid date for ${field.key}:`, formattedData[field.key]);
-                    }
+                    } catch (_error) {
+                        console.error(`Error updating with given port: ${port}`, _error);
+                        alert('Failed to update data');
+}
+
                 }
             });
 
