@@ -5,9 +5,13 @@ import { format, parseISO } from "date-fns";
 import { Button } from "@mui/material";
 import Link from 'next/link';
 
-// Define User interface for type safety
-interface Order {
+// Generic Entity type
+interface Entity {
     id: number;
+}
+
+// Define Order interface that extends Entity
+interface Order extends Entity {
     custId: number;
     itemName: string;
     itemPrice: number;
