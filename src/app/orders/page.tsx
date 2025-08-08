@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Table from "../table";
 import { format, parseISO } from "date-fns";
 import { Button } from "@mui/material";
+import Link from "next/link";
 
 // Define User interface for type safety
 interface Order {
@@ -75,7 +76,7 @@ export default function Orders() {
     return (
         <div>
             <h1>Orders</h1>
-            <h3>Go to <a href='/'>Customers</a></h3>
+            <h3>Go to <Link href='/'>Customers</Link></h3>
             <Button onClick={handleUpdate} variant="contained" style={{ margin: '10px' }}>
                 Refresh Data
             </Button>
