@@ -1,11 +1,9 @@
 'use client';
 
-//USED LLM FOR THIS CODE (IT WAS TOO ANNOYING TO WRITE IT MYSELF)
-
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@mui/material';
-import Link from 'next/link';
 import Table from './table';
+import Link from 'next/link';
 
 // Specific entity types
 interface Customer {
@@ -14,22 +12,12 @@ interface Customer {
     lastName: string;
 }
 
-interface Order {
-    id: number;
-    custId: number;
-    createdAt: string;
-    itemQty: number;
-    itemPrice: number;
-    itemName: string;
-}
-
 export default function Home() {
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [orders, setOrders] = useState<Order[]>([]);
     const [lastUpdated, setLastUpdated] = useState(Date.now());
 
-    // Fetch data
-    const fetchData = useCallback(async (port: number, setState: any) => {
+    // Fetch data with proper typing
+    const fetchData = useCallback(async (port: number, setState: React.Dispatch<React.SetStateAction<Customer[]>>) => {
         try {
             const response = await fetch(`http://localhost:${port}`);
             if (!response.ok) throw new Error(`Failed to fetch from port: ${port}`);
@@ -43,11 +31,9 @@ export default function Home() {
     // Initial fetch and polling
     useEffect(() => {
         fetchData(8080, setCustomers);
-        fetchData(8090, setOrders);
 
         const interval = setInterval(() => {
             fetchData(8080, setCustomers);
-            fetchData(8090, setOrders);
         }, 30_000);
 
         return () => clearInterval(interval);
@@ -60,7 +46,6 @@ export default function Home() {
 
     useEffect(() => {
         fetchData(8080, setCustomers);
-        fetchData(8090, setOrders);
     }, [lastUpdated, fetchData]);
 
     // Column configurations

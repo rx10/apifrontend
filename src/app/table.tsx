@@ -6,25 +6,26 @@ import { ReactNode } from 'react';
 // Generic Entity type
 interface Entity {
     id: number;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 // Column configuration
 interface Column<T> {
     key: keyof T;
     label: string;
-    format?: (value: any) => string | ReactNode;
+    format?: (value: unknown) => string | ReactNode;
 }
 
 // Table props
-interface EntityTableProps<T> {
+interface EntityTableProps<T extends Entity> {
     entities: T[];
     setEntities: React.Dispatch<React.SetStateAction<T[]>>;
     columns: Column<T>[];
     port: number;
 }
 
-export default function Table<T extends Entity>({ entities,
+export default function Table<T extends Entity>({ 
+    entities,
     setEntities,
     columns,
     port,
@@ -49,7 +50,7 @@ export default function Table<T extends Entity>({ entities,
                                     <td key={String(column.key)}>
                                         {column.format
                                             ? column.format(entity[column.key])
-                                            : entity[column.key]}
+                                            : String(entity[column.key])}
                                     </td>
                                 ))}
                                 <td>

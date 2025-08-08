@@ -5,7 +5,7 @@ import { useState } from 'react';
 // Generic Entity type
 interface Entity {
     id: number;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 // Interface for field configuration
@@ -35,7 +35,7 @@ export default function ModalButton<T extends Entity>({
     onClose,
 }: ModalButtonProps<T>) {
     const [open, setOpen] = useState(false);
-    const [updatedData, setUpdatedData] = useState<{ [key: string]: any }>({ ...entity });
+    const [updatedData, setUpdatedData] = useState<Record<string, unknown>>({ ...entity });
     const [loading, setLoading] = useState(false);
 
     const handleOpen = () => {
@@ -55,7 +55,7 @@ export default function ModalButton<T extends Entity>({
             fields.forEach((field) => {
                 if (field.type === 'datetime-local' && formattedData[field.key]) {
                     try {
-                        formattedData[field.key] = parseISO(formattedData[field.key]).toISOString().split('.')[0];
+                        formattedData[field.key] = parseISO(formattedData[field.key] as string).toISOString().split('.')[0];
                     } catch (error) {
                         console.error(`Invalid date for ${field.key}:`, formattedData[field.key]);
                     }
@@ -125,7 +125,7 @@ export default function ModalButton<T extends Entity>({
                             key={field.key}
                             label={field.label}
                             type={field.type}
-                            value={field.type === 'datetime-local' && updatedData[field.key] ? format(parseISO(updatedData[field.key]), 'yyyy-MM-dd\'T\'HH:mm') : updatedData[field.key] || ''}
+                            value={field.type === 'datetime-local' && updatedData[field.key] ? format(parseISO(updatedData[field.key] as string), 'yyyy-MM-dd\'T\'HH:mm') : updatedData[field.key] as string || ''}
                             onChange={(e) =>
                                 setUpdatedData({ ...updatedData, [field.key]: e.target.value })
                             }

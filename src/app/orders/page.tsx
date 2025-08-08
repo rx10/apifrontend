@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Table from "../table";
 import { format, parseISO } from "date-fns";
 import { Button } from "@mui/material";
-import Link from "next/link";
+import Link from 'next/link';
 
 // Define User interface for type safety
 interface Order {
@@ -15,14 +15,24 @@ interface Order {
     createdAt: string;
 }
 
-export default function Orders() {
-    // Initialize users as an empty array with User type
-    const [orders, setOrders] = useState<Order[]>([]);
-    // Add loading state to handle async fetch
-    const [isLoading, setIsLoading] = useState(true);
-    // Add error state for API failures
-    const [error, setError] = useState<string | null>(null);
+interface ApiOrder {
+    id: number;
+    custId?: number;
+    cust_id?: number;
+    itemName?: string;
+    item_name?: string;
+    itemPrice?: number;
+    item_price?: number;
+    itemQty?: number;
+    item_qty?: number;
+    createdAt?: string;
+    created_at?: string;
+}
 
+export default function Orders() {
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState(Date.now());
 
     const orderColumns = [
@@ -43,24 +53,24 @@ export default function Orders() {
         const fetchUsers = async () => {
             try {
                 setIsLoading(true);
+                setError(null);
                 const response = await fetch('http://localhost:8090');
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                const data = await response.json();
-                // Normalize API data to ensure firstName and lastName
-                const normalizedData: Order[] = data.map((item: any) => ({
+                const data: ApiOrder[] = await response.json();
+                const normalizedData: Order[] = data.map((item: ApiOrder) => ({
                     id: item.id,
-                    custId: item.custId || item.cust_id || '', // Handle API key variations
+                    custId: item.custId || item.cust_id || 0,
                     createdAt: item.createdAt || item.created_at || '',
-                    itemPrice: item.itemPrice || item.item_price || '',
+                    itemPrice: item.itemPrice || item.item_price || 0,
                     itemName: item.itemName || item.item_name || '',
-                    itemQty: item.itemQty || item.item_qty || '',
+                    itemQty: item.itemQty || item.item_qty || 0,
                 }));
                 setOrders(normalizedData);
             } catch (err) {
                 console.error('Fetch error:', err);
-                setError('Failed to load users');
+                setError('Failed to load orders');
             } finally {
                 setIsLoading(false);
             }
@@ -68,7 +78,6 @@ export default function Orders() {
         fetchUsers();
     }, [lastUpdated]);
 
-    // Manual refresh
     const handleUpdate = useCallback(() => {
         setLastUpdated(Date.now());
     }, []);
