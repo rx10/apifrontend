@@ -1,41 +1,98 @@
 import { Button, Modal, Box, Typography, TextField } from '@mui/material';
+import { format, parseISO } from 'date-fns';
 import { useState } from 'react';
 
-export default function ModalButton(props: any) {
-    var users = props.users;
-    const setUsers = props.setUsers;
-    const id = props.id;
+// Generic Entity type
+interface Entity {
+    id: number;
+    [key: string]: any;
+}
+
+// Interface for field configuration
+interface ModalField {
+    key: string;
+    label: string;
+    type: 'text' | 'number' | 'datetime-local';
+    readOnly?: boolean;
+}
+
+// Props for the reusable modal
+interface ModalButtonProps<T extends Entity> {
+    entity: T;
+    setEntities: React.Dispatch<React.SetStateAction<T[]>>;
+    fields: ModalField[];
+    port: number;
+    onUpdate?: (updatedData: T) => Promise<void>;
+    onClose?: () => void;
+}
+
+export default function ModalButton<T extends Entity>({
+    entity,
+    setEntities,
+    fields,
+    port,
+    onUpdate,
+    onClose,
+}: ModalButtonProps<T>) {
     const [open, setOpen] = useState(false);
-    const [updatedData, setUpdatedData] = useState({
-        id: props.id,
-        firstName: '',
-        lastName: '',
-    });
+    const [updatedData, setUpdatedData] = useState<{ [key: string]: any }>({ ...entity });
+    const [loading, setLoading] = useState(false);
+
+    const handleOpen = () => {
+        setUpdatedData(entity);
+        setOpen(true);
+    };
+    const handleClose = () => {
+        setOpen(false);
+        if (onClose) onClose();
+    };
 
     const handleUpdate = async () => {
+        setLoading(true);
         try {
-            const response = await fetch(`http://localhost:8080/${users[id].id}`, {
-                method: 'PUT',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    id: updatedData.id,
-                    firstName: updatedData.firstName,
-                    lastName: updatedData.lastName,
-                })
+            // Format datetime-local fields to ISO 8601 without milliseconds
+            const formattedData = { ...updatedData };
+            fields.forEach((field) => {
+                if (field.type === 'datetime-local' && formattedData[field.key]) {
+                    try {
+                        formattedData[field.key] = parseISO(formattedData[field.key]).toISOString().split('.')[0];
+                    } catch (error) {
+                        console.error(`Invalid date for ${field.key}:`, formattedData[field.key]);
+                    }
+                }
             });
-            if (!response.ok) {
-                throw new Error('Failed to update');
+
+            // Use onUpdate if provided, otherwise default to fetch
+            if (onUpdate) {
+                await onUpdate(formattedData as T);
+            } else {
+                const response = await fetch(`http://localhost:${port}/${entity.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formattedData),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to update with given port: ${port}`);
+                }
+
+                // Cast the API response to type T
+                const updatedEntity = await response.json() as T;
+                setEntities((prev) =>
+                    prev.map((item) => (item.id === entity.id ? updatedEntity : item))
+                );
             }
 
-            const updatedUsers = [...users];
-            updatedUsers[id] = { ...updatedUsers[id], ...updatedData };
             alert('Data updated successfully!');
             handleClose();
         } catch (error) {
-            console.error('Error updating data:', error);
+            console.error(`Error updating with given port: ${port}`, error);
+            alert('Failed to update data');
+        } finally {
+            setLoading(false);
         }
     };
     const style = {
@@ -52,18 +109,9 @@ export default function ModalButton(props: any) {
         pb: 3,
     };
 
-    const handleOpen = () => {
-        setUpdatedData({ ...updatedData, id: users[id].id, firstName: users[id].firstName, lastName: users[id].lastName });
-        setOpen(true);
-    };
-    const handleClose = () => {
-        setOpen(false);
-    };
-
-
     return (
         <>
-            <Button onClick={handleOpen}>Edit</Button>
+            <Button onClick={handleOpen} variant="contained">Edit</Button>
             <Modal
                 open={open}
                 onClose={handleClose}
@@ -71,26 +119,31 @@ export default function ModalButton(props: any) {
                 aria-describedby="modal-modal-description"
             >
                 <Box sx={style}>
-                    <Typography variant="h6">Edit Customer</Typography>
-                    <TextField
-                        label="First Name"
-                        value={updatedData.firstName}
-                        onChange={(e) => {
-                            {
-                                setUpdatedData({ ...updatedData, firstName: e.target.value })
+                    <Typography id="modal-modal-title" variant="h6" component="h2">Edit Element</Typography>
+                    {fields.map((field) => (
+                        <TextField
+                            key={field.key}
+                            label={field.label}
+                            type={field.type}
+                            value={field.type === 'datetime-local' && updatedData[field.key] ? format(parseISO(updatedData[field.key]), 'yyyy-MM-dd\'T\'HH:mm') : updatedData[field.key] || ''}
+                            onChange={(e) =>
+                                setUpdatedData({ ...updatedData, [field.key]: e.target.value })
                             }
-                        }}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Last Name"
-                        value={updatedData.lastName}
-                        onChange={(e) => setUpdatedData({ ...updatedData, lastName: e.target.value })}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <Button onClick={handleUpdate} variant="contained">Update</Button>
+                            fullWidth
+                            margin="normal"
+                            disabled={field.readOnly || loading}
+                            InputLabelProps={
+                                field.type === 'datetime-local' && updatedData[field.key]
+                                    ? {
+                                        shrink: true
+                                    }
+                                    : undefined
+                            }
+                        />
+                    ))}
+                    <Button onClick={handleUpdate} variant="contained" disabled={loading}>
+                        {loading ? 'Updating...' : 'Update'}
+                    </Button>
                 </Box>
             </Modal>
         </>

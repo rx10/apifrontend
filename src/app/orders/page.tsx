@@ -1,6 +1,8 @@
 'use client'
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Table from "../table";
+import { format, parseISO } from "date-fns";
+import { Button } from "@mui/material";
 
 // Define User interface for type safety
 interface Order {
@@ -12,7 +14,6 @@ interface Order {
     createdAt: string;
 }
 
-
 export default function Orders() {
     // Initialize users as an empty array with User type
     const [orders, setOrders] = useState<Order[]>([]);
@@ -20,6 +21,22 @@ export default function Orders() {
     const [isLoading, setIsLoading] = useState(true);
     // Add error state for API failures
     const [error, setError] = useState<string | null>(null);
+
+    const [lastUpdated, setLastUpdated] = useState(Date.now());
+
+    const orderColumns = [
+        { key: 'id' as const, label: 'Order ID' },
+        { key: 'custId' as const, label: 'Customer ID' },
+        {
+            key: 'createdAt' as const,
+            label: 'Created At',
+            format: (value: string) =>
+                value ? format(parseISO(value), 'PPpp') : 'Invalid Date',
+        },
+        { key: 'itemQty' as const, label: 'Quantity' },
+        { key: 'itemPrice' as const, label: 'Price' },
+        { key: 'itemName' as const, label: 'Item Name' }
+    ];
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -50,16 +67,30 @@ export default function Orders() {
         fetchUsers();
     }, []);
 
+    // Manual refresh
+    const handleUpdate = useCallback(() => {
+        setLastUpdated(Date.now());
+    }, []);
+
     return (
         <div>
             <h1>Orders</h1>
             <h3>Go to <a href='/'>Customers</a></h3>
+            <Button onClick={handleUpdate} variant="contained" style={{ margin: '10px' }}>
+                Refresh Data
+            </Button>
+
             {isLoading ? (
                 <p>Loading...</p>
             ) : error ? (
                 <p>Error: {error}</p>
             ) : (
-                <Table arr={orders} setArr={setOrders} />
+                <Table
+                    entities={orders}
+                    setEntities={setOrders}
+                    columns={orderColumns}
+                    port={8090}
+                />
             )}
         </div>
     )
