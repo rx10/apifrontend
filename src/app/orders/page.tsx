@@ -17,6 +17,7 @@ interface Order extends Entity {
     itemPrice: number;
     itemQty: number;
     createdAt: string;
+    [key: string]: unknown; // ✅ satisfies Entity's constraint
 }
 
 interface ApiOrder {
