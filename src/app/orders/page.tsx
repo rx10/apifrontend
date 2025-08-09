@@ -99,7 +99,7 @@ export default function Orders() {
             ) : error ? (
                 <p>Error: {error}</p>
             ) : (
-                <Table
+                <Table<Order>
                     entities={orders}
                     setEntities={setOrders}
                     columns={orderColumns}
